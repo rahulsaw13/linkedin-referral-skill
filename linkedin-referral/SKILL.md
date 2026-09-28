@@ -120,7 +120,7 @@ Pick 1 primary + 1 backup per job. Record name, title, profile URL, degree
 
 ### 5. Draft
 Use `reference/message_templates.md`. Rules:
-- Connection note ≤ 300 characters (hard LinkedIn limit — count them).
+- Connection note: **≤ 200 characters on free accounts** (300 on Premium) — the note dialog shows the real cap as "0/200"; check it before drafting. Free accounts also get only ~5 personalised invites per month (dialog shows "N personalized invitations remaining") — spend them on hiring managers, not peers. Put the req/job ID in the note (referral portals search by it); send full company careers link in the follow-up message after they accept.
 - Message / InMail ≤ ~700 characters, 3 short sentences + ask.
 - Personalise: their name, the exact role and job ID/link, 1–2 résumé facts
   that match the JD's top requirements.
