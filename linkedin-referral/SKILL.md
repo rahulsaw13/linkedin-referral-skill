@@ -84,18 +84,31 @@ https://www.linkedin.com/jobs/search/?keywords=Senior%20Data%20Engineer
 
 - `f_WT`: 1 on-site, 2 remote, 3 hybrid. `f_E`: 3 associate, 4 mid-senior, 5 director.
 - `f_TPR=r604800` last 7 days (`r86400` = 24 h). `f_AL=true` Easy Apply only.
-- Run one search per role × location group. Use `browser_snapshot` (not
-  screenshots) to read the result list; scroll the left pane with
-  `browser_evaluate` if needed.
+- Run one search per role × location group. Read the results with
+  `browser_evaluate` + `scripts/extract_jobs.js` (pass the file's contents as
+  `function`). It scrolls the results pane itself; without scrolling LinkedIn
+  renders only ~7 cards.
+- If "past week" gives few hits, widen to `f_TPR=r2592000` (month) and
+  `f_E=3%2C4` (associate + mid-senior).
 
 ### 3. Filter and score
-For each result open the job (click card), read the description, and extract:
-title, company, location, work mode, posted date, applicants, salary (if
-shown), required years, key skills, Easy Apply yes/no, job URL.
+For each promising result navigate to `/jobs/view/<id>/`, `browser_wait_for`
+"About the job" (the description loads late), then run
+`scripts/extract_job_detail.js`. It returns title, company, location, work
+mode, age, applicants, salary (if shown), required-years lines, the hiring
+poster, and the **external careers link** (the "Apply on company website"
+URL with LinkedIn's safety redirect removed). Extract the req ID from that URL:
+Workday `_JR0287292`, Greenhouse `gh_jid=6629676`, Oracle `/job/26014501`.
+Easy-Apply-only jobs have no external link; use the LinkedIn job URL.
 
-Discard when: salary shown and max < floor; required years clearly beyond
-résumé + 2; on-site in a non-preferred city; company on avoid list; staffing
-agency reposts with no real employer.
+Read the requirements properly. Compare the required years with the user's
+real total (sum of full-time roles). Note the gaps honestly in the table.
+
+Discard when: salary shown and max < floor; required years 2+ beyond the
+résumé; "immediate joiner" / "notice ≤ 15 days" when the user's notice period
+is longer; entry-level roles when the user is mid-level; on-site in a
+non-preferred city; company on avoid list; staffing-agency reposts with no
+named employer.
 
 **Salary unknown** (most Indian postings): keep only if the employer is a
 product company, GCC / captive centre, well-funded startup, or big-tech — the
@@ -115,6 +128,10 @@ For each chosen job, in order of usefulness:
    the role's city.
 3. A recruiter / talent-acquisition partner at the company.
 
+Read people results with `scripts/extract_people.js`. Card links can point
+at a *mutual connection* rather than the person, so open the chosen profile
+and confirm name, company and title before drafting.
+
 Pick 1 primary + 1 backup per job. Record name, title, profile URL, degree
 (1st/2nd/3rd), and why chosen.
 
@@ -130,11 +147,17 @@ Use `reference/message_templates.md`. Rules:
 Show every draft to the user in a numbered list with the character count.
 
 ### 6. Send (after approval)
-- Connect: open profile → "Connect" (may be under "More") → "Add a note" →
-  type note → "Send". If only "Follow" shows, use "More → Connect".
-- Message (1st-degree or open profile): "Message" → type → send.
-- After each send, `browser_snapshot` to confirm it went ("Pending" / message
-  shows in thread), then wait 20–60 s before the next.
+- Connect: on the profile click the button named exactly "More"
+  (`internal:role=button[name="More" s]`, there are many "…more" buttons), then
+  menuitem "Invite <Name> to connect" → "Add a note" → type into the textbox
+  "Please limit personal note to…" → snapshot `[role="dialog"]` to confirm
+  recipient, text and counter (e.g. `189/200`) → "Send invitation" → confirm
+  "Invitation sent" appears. Report the "N personalized invitations remaining"
+  number.
+- Message: works free only for 1st-degree connections (and some open
+  profiles). On others "Message" leads to Premium InMail and no compose box
+  opens. Report it and fall back to a connect draft; don't retry.
+- Wait 20–60 s between sends.
 
 ### 7. Easy Apply (optional, after approval)
 Open job → "Easy Apply". Fill contact info from résumé, upload résumé via
@@ -145,18 +168,24 @@ page to the user before pressing "Submit application". Skip external-site
 applications; give the link instead.
 
 ### 8. Log
-Append each action to `linkedin_tracker.csv` in the working directory
-(create with header if missing):
+Keep `linkedin_tracker.csv` in the job-hunt directory with
+`scripts/tracker.py` (`init`, `add`, `update`, `list`, `due`,
+`count "<note>" --limit 200`). Also rewrite `follow_up.md` from
+`reference/follow_up_template.md` at the end of each run. It's the
+human-readable state: who was contacted, careers links, backups, next check
+date. Columns:
 
 ```
 date,company,role,job_url,salary,fit,person,person_title,profile_url,action,status,notes
 ```
 
-`action` ∈ {shortlisted, connect_sent, message_sent, applied, skipped};
-`status` starts `pending`. On a later run, read the tracker first: skip jobs
-already actioned, and list follow-ups due (connect accepted but no reply after
-4–5 days → draft a short follow-up; no acceptance after 7 days → try backup
-person).
+`action` ∈ {shortlisted, drafted, connect_sent, message_sent, followup_sent,
+applied, referred, not_sent, skipped}; `status` e.g. `pending`,
+`pending_accept`, `accepted`, `pending_reply`, `on_hold`. On a later run, run
+`tracker.py due` first. Check `/mynetwork/invitation-manager/sent/` with
+`scripts/check_invites.js` and `/messaging/` for replies. Draft follow-ups for
+accepted connections that include the careers link + req ID. No acceptance
+after 7 days → withdraw and try the backup person.
 
 End each session with a summary: searched / shortlisted / sent / applied
 counts, today's remaining quota, follow-ups due next run.
@@ -174,3 +203,9 @@ counts, today's remaining quota, follow-ups due next run.
   several cities run separate searches rather than one combined query.
 - Don't leave the Playwright browser open between sessions unnecessarily —
   a stale Chrome locks the profile for the next run.
+- Job detail pages render the header first; always wait for "About the job"
+  before extracting, or you'll read an empty description.
+- Avoid LinkedIn's guest/`jobs-guest` APIs from inside the page: they return
+  nothing when logged in and flood the console.
+- A subagent version of this workflow lives in `agents/linkedin-referral-agent.md`
+  (search / send / check modes).
