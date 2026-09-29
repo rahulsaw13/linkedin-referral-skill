@@ -32,14 +32,27 @@ def load(path):
     if not os.path.exists(path):
         return []
     with open(path, encoding="utf-8", newline="") as f:
-        return list(csv.DictReader(f))
+        rows = list(csv.DictReader(f, restkey="_extra"))
+    for r in rows:
+        # A hand-edited row with an unquoted comma yields extra fields; fold
+        # them back into notes instead of failing on save.
+        extra = r.pop("_extra", None)
+        if extra:
+            r["notes"] = ",".join([r.get("notes") or ""] + extra)
+        for k in HEADER:
+            if r.get(k) is None:
+                r[k] = ""
+    return rows
 
 
 def save(path, rows):
-    with open(path, "w", encoding="utf-8", newline="") as f:
+    # Write to a temp file and rename, so a failure never truncates the tracker.
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=HEADER)
         w.writeheader()
         w.writerows(rows)
+    os.replace(tmp, path)
 
 
 def cmd_init(a):
