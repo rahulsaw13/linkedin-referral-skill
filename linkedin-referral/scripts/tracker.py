@@ -119,7 +119,7 @@ def cmd_due(a):
                 print(f"BACKUP   {who}: invite {age}d old, withdraw and contact the backup")
             else:
                 print(f"CHECK    {who}: invite {age}d old, see if it was accepted")
-        elif r["action"] in ("message_sent",) and r["status"] in ("pending_reply", "accepted"):
+        elif r["action"] in ("message_sent", "followup_sent") and r["status"] in ("pending_reply", "accepted"):
             if age >= FOLLOW_UP_DAYS:
                 print(f"NUDGE    {who}: no reply for {age}d, send one short follow-up")
         elif r["status"] == "accepted":
