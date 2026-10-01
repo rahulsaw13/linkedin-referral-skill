@@ -7,9 +7,9 @@ description: >-
   matches with a fit score, find the hiring manager, senior engineers and
   recruiter at each company, draft a personalised connection note or referral
   message per person, and send each one only after the user approves it —
-  logging everything to a tracker. Can also fill LinkedIn Easy Apply forms.
+  logging everything to a tracker. Can also fill and submit applications on LinkedIn Easy Apply, Greenhouse, Ashby, Phenom, Workday and Google Careers, and search company career sites directly via Google site: queries.
   Use when the user asks to "find jobs on LinkedIn", "ask for referrals",
-  "ping hiring managers", "apply to jobs for me", "job hunt", or anything
+  "ping hiring managers", "apply to jobs for me", "apply on company sites", "job hunt", or anything
   about automating a LinkedIn job search or referral outreach.
 ---
 
@@ -159,13 +159,38 @@ Show every draft to the user in a numbered list with the character count.
   opens. Report it and fall back to a connect draft; don't retry.
 - Wait 20–60 s between sends.
 
-### 7. Easy Apply (optional, after approval)
-Open job → "Easy Apply". Fill contact info from résumé, upload résumé via
-`browser_file_upload`, answer screening questions **only from facts the user
-has given** — if a question needs a number or opinion not on record (notice
-period, current CTC, expected CTC, relocation), ask the user. Show the review
-page to the user before pressing "Submit application". Skip external-site
-applications; give the link instead.
+### 7. Apply (after approval)
+Applications go out only for jobs the user approved, by name or as "apply all"
+for a list they've seen. Follow `reference/ats_playbook.md` for the site:
+LinkedIn Easy Apply, Greenhouse, Ashby, Phenom (eBay/Mastercard), Workday
+(NVIDIA/Intel/Wells Fargo) or Google Careers. Run `scripts/dump_form.js`
+after every step.
+
+- Answer only from `linkedin_profile.md` screening answers and the résumé. If
+  a question needs a fact that isn't on file (a number, a date, years of a
+  skill), stop and ask.
+- Keep years per skill honest, e.g. TCS Selenium time is not agentic-AI time.
+  If the user asks for an inflated number, warn once and go with their call.
+- **Leave for the user:** account creation and sign-in, legal consents and
+  "I certify" checkboxes, marketing opt-ins, and sensitive self-identification
+  (race, disability, veteran, citizenship). For a required gender field, pick
+  the decline option or leave it.
+- Submit only when every field is filled from confirmed facts. Otherwise stop
+  on the last allowed page and tell the user exactly what's left, and in which
+  tab.
+- After submitting, confirm the success text ("Application submitted", "Thank
+  you for applying", or the dashboard showing "Submitted"). Then log every
+  answer in `applications_log.md` (template in `reference/`).
+- Site quotas: Google Careers 3 applications per 30 days, OpenAI 5 per 180
+  days. Track the counts in the tracker notes.
+
+### 7b. Direct company search (outside LinkedIn)
+Many roles are posted only on company career sites. Use Google `site:`
+searches with `tbs=qdr:m` (past month) and read results with
+`scripts/google_results.js`:
+`site:job-boards.greenhouse.io`, `site:jobs.lever.co`, `site:jobs.ashbyhq.com`,
+`site:myworkdayjobs.com`, plus role words and cities. Also search Google
+Careers directly. Open every hit: many are closed, US-only or too senior.
 
 ### 8. Log
 Keep `linkedin_tracker.csv` in the job-hunt directory with

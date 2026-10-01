@@ -34,9 +34,22 @@ daily_connect_cap: 15
 daily_apply_cap: 10
 easy_apply: ask                  # ask | never | yes_after_review
 
-# Answers for Easy Apply screening questions (leave blank → skill asks)
+# Confirmed screening answers: the skill only uses what's here (blank → it asks)
 notice_period_days:
-current_ctc_lpa:
-expected_ctc_lpa:
+current_ctc: ""            # e.g. "20 LPA fixed + 10% bonus + ESPP"
+expected_ctc: ""           # e.g. "25-30 LPA"; top-paying: "market-competitive"
+expected_ctc_single_number: # for number-only fields, e.g. 28
 willing_to_relocate:
+work_authorization_country: # e.g. India
+visa_sponsorship_needed:
+non_compete_or_restrictions:
+years_by_skill:             # be honest; must match the résumé
+  agentic_ai:
+  llm_apps:
+llm_ecosystem: ""           # e.g. "Anthropic, OpenAI, Copilot, self-hosted"
+phone: ""
+email: ""
+address: ""                 # Workday sites require it
+linkedin_url: ""
+current_location: ""
 ```
