@@ -84,7 +84,7 @@ def cmd_update(a):
     for r in rows:
         if r["company"].lower() != a.company.lower():
             continue
-        if a.person and r["person"].lower() != a.person.lower():
+        if a.person is not None and r["person"].lower() != a.person.lower():
             continue
         if a.action:
             r["action"] = a.action
